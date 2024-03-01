@@ -29,9 +29,15 @@ Ensure you have Python and xlwings installed. xlwings allows for seamless integr
 2. Execute the Python script. The script reads the input data from the Excel workbook, performs the projections based on the described methodology, and writes the output to a CSV file.
 3. The output CSV file will be saved in the specified directory, containing the total projected fees by month and scenario.
 
-## How to Contribute
-We welcome contributions and suggestions to improve the model further. Please feel free to fork the repository, make changes, and submit pull requests. If you encounter any issues or have any questions, please open an issue on GitHub.
+## Benefits of Transitioning from VBA to Python
 
-## License
-Specify your license or state if the project is open-source.
+This project showcases a significant enhancement in processing efficiency by migrating from Excel's VBA to Python, leveraging xlwings for Excel integration. Key benefits include:
+
+- **Increased Speed:** Processing times were dramatically reduced from 7-10 minutes to under 30 seconds, enhancing productivity and enabling faster decision-making.
+- **Scalability:** Python's scalability allows for more complex analyses and larger datasets without a significant increase in processing time.
+- **Advanced Libraries:** Utilizing Python's extensive libraries, such as Pandas for data manipulation and NumPy for numerical analysis, contributes to the model's efficiency and capabilities.
+- **Cross-Platform Compatibility:** Python's ability to run on various operating systems provides flexibility in deployment and use across different platforms.
+- **Community Support:** The vast Python community offers a wealth of resources, contributing to ongoing improvements and innovation in project development.
+
+Choosing Python over VBA for this project not only achieved the immediate goal of faster execution times but also opened the door to future enhancements and more complex modeling capabilities.
 
