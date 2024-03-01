@@ -1,0 +1,128 @@
+Sub Projection()
+
+    Application.ScreenUpdating = False
+    Application.Calculation = False
+            
+    Dim Age As Integer
+    Dim MortalityTable As Integer
+    Dim LapseTable As Integer
+    Dim Duration As Integer
+    Dim Fee As Double
+    Dim FeeMode As Integer
+    
+    Dim oFile As String
+    Dim TotalFee(1 To 1200) As Double
+    Dim SurvivalRate As Double
+    Dim LapseRate As Double
+    Dim MortalityRate As Double
+    Dim RunNumber As Integer
+    Dim PandemicIncidence As Double
+    Dim PandemicSeverity As Double
+    Dim PandemicYear(1 To 50) As Double
+    Dim PandemicFactor(1 To 600) As Double
+                            
+    Set LapseRange = Range("LapseRange") 'lapse rates dataframe
+    Set MortalityRange = Range("MortalityRange") 'mortality rates dataframe
+    
+    RunNumber = Range("NumScen") 'number of stochastic scenarios
+    PandemicIncidence = Range("PandemicIncidence") 'Probability of a pandemic
+    PandemicSeverity = Range("PandemicSeverity") 'Severity of a pandemic
+    
+    oFile = Range("file") 'output file
+    'Open oFile For Output As #1
+            
+    For i = 1 To RunNumber 'loop through stochastic scenarios
+        For j = 1 To 600
+            TotalFee(j) = 0
+        Next j
+        
+        Calculate
+        
+        For j = 1 To 50 'determine if a pandemic happens in a year
+            If j = 1 Then
+                If Rnd < PandemicIncidence Then
+                    PandemicYear(j) = 1
+                Else
+                    PandemicYear(j) = 0
+                End If
+            Else
+                If PandemicYear(j - 1) = 1 Then
+                    PandemicYear(j) = 0.5
+                Else
+                    If Rnd < PandemicIncidence Then
+                        PandemicYear(j) = 1
+                    Else
+                        PandemicYear(j) = 0
+                    End If
+                End If
+            End If
+        Next j
+        
+        
+        For j = 1 To 600 'determine the pandemic factors by month
+            PandemicFactor(j) = PandemicYear(Int((j - 0.1) / 12) + 1) * PandemicSeverity
+            
+            If Sheets("Inforce").Cells(j + 1, 4) > 0 Then
+                Age = Sheets("Inforce").Cells(j + 1, 4)
+                Duration = Sheets("Inforce").Cells(j + 1, 6)
+                MortalityTable = Sheets("Inforce").Cells(j + 1, 7)
+                LapseTable = Sheets("Inforce").Cells(j + 1, 8)
+                Fee = Sheets("Inforce").Cells(j + 1, 9)
+                FeeMode = Sheets("Inforce").Cells(j + 1, 10)
+                
+                For k = 1 To 600 'loop through 600 months (50 years)
+                    
+                    If k = 1 Then ' determine the policy survival rate
+                        SurvivalRate = 1
+                        LapseRate = 0
+                        MortalityRate = 0
+                    Else
+                        LapseRate = LapseRange(Duration, LapseTable) 'lapse rates are monthly rates
+                        MortalityRate = 1 - ((1 - MortalityRange(Age, MortalityTable) * PandemicFactor(k)) ^ (1 / 12)) 'mortality rates are annual rates and are converted to monthly
+                        
+                        If RunType = 0 Then
+                            If LapseRate < Rnd Then
+                                LapseRate = 0
+                            Else
+                                LapseRate = 1
+                            End If
+                            
+                            If MortalityRate < Rnd Then
+                                MortalityRate = 0
+                            Else
+                                MortalityRate = 1
+                            End If
+                        End If
+                        
+                        SurvivalRate = SurvivalRate * (1 - LapseRate) * (1 - MortalityRate)
+                    End If
+                    
+                    TotalFee(k) = TotalFee(k) + SurvivalRate * Fee
+                        
+                    Duration = Duration + 1
+                    Age = Age + 1
+                     
+                    If SurvivalRate = 0 Then 'if policy doesn't survive all future cashflows are zero and go to next policy
+                        GoTo 123:
+                    End If
+                Next k
+                            
+            End If
+123:
+        Next j
+           
+        'Write data to output csv file
+        For j = 1 To 599
+            Write #1, TotalFee(j),
+        Next j
+        Write #1, TotalFee(600)
+        
+    Next i
+               
+    Close #1
+    
+    Application.ScreenUpdating = True
+    Application.Calculation = True
+
+End Sub
+
